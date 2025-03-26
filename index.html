@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jogo da Memória - Animais</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background: url(img/Desenvolvido\ por\ Ali\ Roze\ M\ P\ Donadio.png) no-repeat center;
+            overflow: hidden;
+
+        }
+
+        h1 {
+            color: black; /* Cor do texto alterada para preto */
+            margin-bottom: 20px;
+        }
+
+        .game-container {
+            display: grid;
+            grid-template-columns: repeat(4, 90px); /* 4 colunas */
+            grid-template-rows: repeat(5, 90px); /* 5 linhas */
+            gap: 10px;
+            justify-content: center;
+            grid-auto-rows: 90px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            width: 90px;
+            height: 90px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.5s;
+            cursor: pointer;
+        }
+
+        .card.flip {
+            transform: rotateY(180deg);
+        }
+
+        .card .front,
+        .card .back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 48px; /* Aumentei o tamanho das imagens */
+        }
+
+        .card .front {
+            background-color: #ecf0f1;
+        }
+
+        .card .back {
+            background-color: #3498db;
+            transform: rotateY(180deg);
+        }
+
+        #timer, #score {
+            color: black; /* Cor do texto alterada para preto */
+            font-size: 24px;
+            margin: 10px 0;
+        }
+
+        #score {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Jogo da Memória - Animais</h1>
+    <div id="timer">Tempo: 00:00</div>
+    <div id="score">Pontos: 0</div>
+    <div class="game-container" id="game-container"></div>
+
+    <script>
+        let animalImages = ['🐶', '🐱', '🐭', '🐹', '🐰', '🐼', '🦁', '🐯', '🐸', '🐷']; // Agora são 10 tipos de animais
+        let cardValues = [...animalImages, ...animalImages]; // Dois pares de cada tipo de animal
+        let flippedCards = [];
+        let matchedPairs = 0;
+        let score = 0;
+        let timer;
+        let time = 0;
+        let isGameActive = true;
+        let timeout;
+
+        function createCards() {
+            const gameContainer = document.getElementById('game-container');
+            cardValues.sort(() => Math.random() - 0.5); // Embaralha as cartas
+
+            cardValues.forEach((value) => {
+                const card = document.createElement('div');
+                card.classList.add('card');
+                card.dataset.value = value;
+                card.innerHTML = `
+                    <div class="front"></div>
+                    <div class="back">${value}</div>
+                `;
+                // Adicionando suporte ao toque na tela para dispositivos móveis
+                card.addEventListener('click', flipCard);
+                card.addEventListener('touchstart', flipCard); // Suporte ao toque
+                gameContainer.appendChild(card);
+            });
+        }
+
+        function flipCard() {
+            if (!isGameActive || flippedCards.length === 2 || this.classList.contains('flip')) return;
+
+            this.classList.add('flip');
+            flippedCards.push(this);
+
+            if (flippedCards.length === 2) {
+                setTimeout(checkMatch, 1000);
+            }
+        }
+
+        function checkMatch() {
+            const [firstCard, secondCard] = flippedCards;
+
+            if (firstCard.dataset.value === secondCard.dataset.value) {
+                matchedPairs++;
+                score += 10;
+                document.getElementById('score').textContent = `Pontos: ${score}`;
+                flippedCards = [];
+
+                if (matchedPairs === cardValues.length / 2) {
+                    isGameActive = false;
+                    clearTimeout(timeout);
+                    alert('Você venceu!');
+                }
+            } else {
+                firstCard.classList.remove('flip');
+                secondCard.classList.remove('flip');
+                flippedCards = [];
+            }
+        }
+
+        function updateTimer() {
+            time++;
+            const minutes = Math.floor(time / 60);
+            const seconds = time % 60;
+            document.getElementById('timer').textContent = `Tempo: ${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+            if (time >= 90 && isGameActive) {
+                isGameActive = false;
+                clearInterval(timer);
+                alert('Tempo esgotado! Você perdeu.');
+            }
+        }
+
+        function startGame() {
+            createCards();
+            timer = setInterval(updateTimer, 1000);
+            timeout = setTimeout(() => {
+                if (isGameActive) {
+                    isGameActive = false;
+                    alert('Tempo esgotado! Você perdeu.');
+                }
+            }, 90000); // Tempo limite de 90 segundos
+        }
+
+        window.onload = startGame;
+    </script>
+</body>
+</html>
